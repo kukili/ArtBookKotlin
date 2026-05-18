@@ -16,6 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,24 +65,40 @@ fun ArtListScreen(dbHelper: DBHelper, onItemClick: (Int) -> Unit) {
 
     Scaffold(
         topBar = {
-            Surface(
+            // Status badge style top bar: rounded pill with icon + text
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // Reduced vertical padding to bring the list closer to the status badge
                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer
+                contentAlignment = Alignment.Center
             ) {
-                Box(
+                Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    contentAlignment = Alignment.Center
+                        .wrapContentWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    tonalElevation = 2.dp
                 ) {
-                    Text(
-                        text = "ArtWork Main List",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .wrapContentWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "ArtWork Main List",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
                 }
             }
         },
