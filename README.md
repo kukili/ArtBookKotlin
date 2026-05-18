@@ -63,7 +63,7 @@ ArtBookKotlin/
 ![Main List](screenshots/main-list.png)
 
 ### Yeni Eser / Add New Artwork
-![Add New Artwork](screenshots/add-art.png)
+![Add New Artwork](https://github.com/user-attachments/assets/7e12ccf3-aae8-4b77-9137-4e37d1d6d5f0)
 
 ### Detay Ekrani / Detail Screen
 ![Detail Screen](screenshots/detail.png)
