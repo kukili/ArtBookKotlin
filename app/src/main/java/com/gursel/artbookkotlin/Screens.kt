@@ -64,6 +64,7 @@ fun ArtListScreen(dbHelper: DBHelper, onItemClick: (Int) -> Unit) {
     LaunchedEffect(Unit) { arts = dbHelper.getAllArts() }
 
     Scaffold(
+        modifier = Modifier.padding(top = 48.dp),
         topBar = {
             // Status badge style top bar: rounded pill with icon + text
             Box(
@@ -94,7 +95,7 @@ fun ArtListScreen(dbHelper: DBHelper, onItemClick: (Int) -> Unit) {
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "ArtWork Main List",
+                                text = "ArtWork Main List",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
