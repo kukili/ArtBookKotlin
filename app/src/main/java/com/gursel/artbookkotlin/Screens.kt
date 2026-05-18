@@ -1,5 +1,6 @@
 package com.gursel.artbookkotlin
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.os.Build
@@ -11,11 +12,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
@@ -33,7 +37,11 @@ fun AppNav(dbHelper: DBHelper) {
     NavHost(navController = navController, startDestination = "list") {
         composable("list") {
             ArtListScreen(dbHelper) { artId ->
-                navController.navigate("art/$artId")
+                if (artId == 0) {
+                    navController.navigate("art/new")
+                } else {
+                    navController.navigate("art/$artId")
+                }
             }
         }
         composable("art/new") {
@@ -54,7 +62,7 @@ fun ArtListScreen(dbHelper: DBHelper, onItemClick: (Int) -> Unit) {
     LaunchedEffect(Unit) { arts = dbHelper.getAllArts() }
 
     Scaffold(floatingActionButton = {
-        FloatingActionButton(onClick = { /* navigate to new */ onItemClick(-1) }) {
+        FloatingActionButton(onClick = { onItemClick(0) }) {
             Text("+")
         }
     }) { padding ->
@@ -94,47 +102,142 @@ fun ArtDetailScreen(dbHelper: DBHelper, info: String, artId: Int = -1, onDone: (
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            val input = context.contentResolver.openInputStream(it)
-            val bytes = input?.readBytes()
-            input?.close()
-            if (bytes != null) imageBytes = bytes
+            try {
+                val input = context.contentResolver.openInputStream(it)
+                val bytes = input?.readBytes()
+                input?.close()
+                if (bytes != null) imageBytes = bytes
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(if (info=="new") "Add Art" else "Art") }) }) { padding ->
-        Column(modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+    fun bytesToBitmap(bytes: ByteArray): Bitmap? {
+        return try {
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        } catch (e: Exception) {
+            null
+        }
+    }
 
+    Scaffold(topBar = {
+        TopAppBar(title = { Text(if (info == "new") "Add New Artwork" else "Artwork Details") })
+    }) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // Image Display
             if (imageBytes != null) {
-                Image(painter = rememberAsyncImagePainter(imageBytes), contentDescription = null, modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp))
+                val bitmap = bytesToBitmap(imageBytes!!)
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .clickable { if (info == "new") launcher.launch("image/*") }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .clickable { if (info == "new") launcher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Failed to load image")
+                    }
+                }
             } else {
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp), contentAlignment = Alignment.Center) {
-                    Text("Select Image")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clickable { if (info == "new") launcher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Tap to Select Image")
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(value = artName, onValueChange = { artName = it }, label = { Text("Art Name") })
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(value = painterName, onValueChange = { painterName = it }, label = { Text("Painter Name") })
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(value = yearText, onValueChange = { yearText = it }, label = { Text("Created Date") })
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { launcher.launch("image/*") }) { Text("Select Image") }
-                if (info == "new") {
-                    Button(onClick = {
-                        imageBytes?.let { bytes ->
-                            dbHelper.insertArt(artName, painterName, yearText, bytes)
+            // Art Name Input
+            OutlinedTextField(
+                value = artName,
+                onValueChange = { artName = it },
+                label = { Text("Art Name") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = info == "new"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Painter Name Input
+            OutlinedTextField(
+                value = painterName,
+                onValueChange = { painterName = it },
+                label = { Text("Painter Name") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = info == "new"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Year Input
+            OutlinedTextField(
+                value = yearText,
+                onValueChange = { yearText = it },
+                label = { Text("Created Date (Year)") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = info == "new"
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Buttons
+            if (info == "new") {
+                Button(
+                    onClick = { launcher.launch("image/*") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text("SELECT IMAGE")
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        if (artName.isNotBlank() && painterName.isNotBlank() && yearText.isNotBlank() && imageBytes != null) {
+                            dbHelper.insertArt(artName, painterName, yearText, imageBytes!!)
                             onDone()
                         }
-                    }) { Text("Save") }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    enabled = artName.isNotBlank() && painterName.isNotBlank() && yearText.isNotBlank() && imageBytes != null
+                ) {
+                    Text("SAVE ARTWORK")
+                }
+            } else {
+                Button(
+                    onClick = { onDone() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text("BACK")
                 }
             }
         }
