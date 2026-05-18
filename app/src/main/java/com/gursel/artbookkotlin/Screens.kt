@@ -60,7 +60,30 @@ fun ArtListScreen(dbHelper: DBHelper, onItemClick: (Int) -> Unit) {
     var arts by remember { mutableStateOf(listOf<Art>()) }
     LaunchedEffect(Unit) { arts = dbHelper.getAllArts() }
 
-    Scaffold(bottomBar = {
+    Scaffold(
+        topBar = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "ArtWork Main List",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        },
+        bottomBar = {
         Button(
             onClick = { onItemClick(0) },
             modifier = Modifier
