@@ -57,13 +57,18 @@ fun AppNav(dbHelper: DBHelper) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArtListScreen(dbHelper: DBHelper, onItemClick: (Int) -> Unit) {
-    val context = LocalContext.current
     var arts by remember { mutableStateOf(listOf<Art>()) }
     LaunchedEffect(Unit) { arts = dbHelper.getAllArts() }
 
-    Scaffold(floatingActionButton = {
-        FloatingActionButton(onClick = { onItemClick(0) }) {
-            Text("+")
+    Scaffold(bottomBar = {
+        Button(
+            onClick = { onItemClick(0) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+                .height(52.dp)
+        ) {
+            Text("Add New ArtWork")
         }
     }) { padding ->
         LazyColumn(modifier = Modifier.padding(padding)) {
